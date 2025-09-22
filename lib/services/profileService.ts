@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { ProfileFormData, ProfileResponse, Profile } from '../types/profile';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://natalia3-backend.vercel.app/api';
 
 // Create axios instance
 const api = axios.create({

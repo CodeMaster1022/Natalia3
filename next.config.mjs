@@ -8,6 +8,18 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: ['natalia3-backend.vercel.app', 'res.cloudinary.com'],
+  },
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://natalia3-backend.vercel.app/api',
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://natalia3-backend.vercel.app/api/:path*',
+      },
+    ];
   },
 }
 
