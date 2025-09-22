@@ -1,15 +1,20 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Menu, X, GraduationCap } from "lucide-react"
+import { Menu, X, GraduationCap, User, LogOut, Settings } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useAppSelector, useAppDispatch } from "@/lib/hooks/redux"
+import { logoutUser } from "@/lib/store/authSlice"
 import Link from "next/link"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const router = useRouter()
+  const dispatch = useAppDispatch()
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth)
   // Add scroll effect for header
   useEffect(() => {
     const handleScroll = () => {
@@ -30,6 +35,23 @@ export function Header() {
       document.body.style.overflow = 'unset'
     }
   }, [isMenuOpen])
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showUserMenu && !(event.target as Element).closest('.user-menu-container')) {
+        setShowUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showUserMenu])
+
+  const handleLogout = () => {
+    dispatch(logoutUser())
+    setShowUserMenu(false)
+    router.push('/')
+  }
 
   return (
     <header className={`sticky top-0 w-full z-50 transition-all duration-300 ${
@@ -68,12 +90,58 @@ export function Header() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <button className="px-6 py-2.5 rounded-full text-white border-2 border-white/30 hover:border-white hover:bg-white hover:text-[#49BBBD] font-semibold transition-all duration-300" onClick={() => router.push('/auth')}>
-              Login
-            </button>
-            <button className="px-6 py-2.5 rounded-full bg-white text-[#49BBBD] hover:bg-orange-400 hover:text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5" onClick={() => router.push('/auth')}>
-              Sign Up
-            </button>
+            {isAuthenticated ? (
+              <div className="relative user-menu-container">
+                <button 
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-full text-white border-2 border-white/30 hover:border-white hover:bg-white hover:text-[#49BBBD] font-semibold transition-all duration-300"
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                >
+                  <User className="w-4 h-4" />
+                  {user?.username || 'User'}
+                </button>
+                
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border overflow-hidden z-50">
+                    <button
+                      onClick={() => {
+                        router.push('/dashboard')
+                        setShowUserMenu(false)
+                      }}
+                      className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                    >
+                      <User className="w-4 h-4" />
+                      Dashboard
+                    </button>
+                    <button
+                      onClick={() => {
+                        router.push('/profile')
+                        setShowUserMenu(false)
+                      }}
+                      className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Profile
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <button className="px-6 py-2.5 rounded-full text-white border-2 border-white/30 hover:border-white hover:bg-white hover:text-[#49BBBD] font-semibold transition-all duration-300" onClick={() => router.push('/auth')}>
+                  Login
+                </button>
+                <button className="px-6 py-2.5 rounded-full bg-white text-[#49BBBD] hover:bg-orange-400 hover:text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5" onClick={() => router.push('/auth')}>
+                  Sign Up
+                </button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -143,12 +211,52 @@ export function Header() {
 
               {/* Mobile Auth Buttons */}
               <div className="mt-8 space-y-3">
-                <button className="w-full px-6 py-3 rounded-full text-white border-2 border-white/30 hover:border-white hover:bg-white hover:text-[#49BBBD] font-semibold transition-all duration-300" onClick={() => router.push('/auth')}>
-                  Login
-                </button>
-                <button className="w-full px-6 py-3 rounded-full bg-white text-[#49BBBD] hover:bg-orange-400 hover:text-white font-semibold transition-all duration-300 shadow-lg" onClick={() => router.push('/auth')}>
-                  Sign Up
-                </button>
+                {isAuthenticated ? (
+                  <>
+                    <div className="px-4 py-3 bg-white/20 rounded-lg text-center">
+                      <p className="text-white font-medium">Welcome, {user?.username}!</p>
+                    </div>
+                    <button 
+                      className="w-full px-6 py-3 rounded-full text-white border-2 border-white/30 hover:border-white hover:bg-white hover:text-[#49BBBD] font-semibold transition-all duration-300 flex items-center justify-center gap-2" 
+                      onClick={() => {
+                        router.push('/dashboard')
+                        setIsMenuOpen(false)
+                      }}
+                    >
+                      <User className="w-4 h-4" />
+                      Dashboard
+                    </button>
+                    <button 
+                      className="w-full px-6 py-3 rounded-full text-white border-2 border-white/30 hover:border-white hover:bg-white hover:text-[#49BBBD] font-semibold transition-all duration-300 flex items-center justify-center gap-2" 
+                      onClick={() => {
+                        router.push('/profile')
+                        setIsMenuOpen(false)
+                      }}
+                    >
+                      <Settings className="w-4 h-4" />
+                      Profile
+                    </button>
+                    <button 
+                      className="w-full px-6 py-3 rounded-full bg-red-500 text-white hover:bg-red-600 font-semibold transition-all duration-300 shadow-lg flex items-center justify-center gap-2" 
+                      onClick={() => {
+                        handleLogout()
+                        setIsMenuOpen(false)
+                      }}
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="w-full px-6 py-3 rounded-full text-white border-2 border-white/30 hover:border-white hover:bg-white hover:text-[#49BBBD] font-semibold transition-all duration-300" onClick={() => router.push('/auth')}>
+                      Login
+                    </button>
+                    <button className="w-full px-6 py-3 rounded-full bg-white text-[#49BBBD] hover:bg-orange-400 hover:text-white font-semibold transition-all duration-300 shadow-lg" onClick={() => router.push('/auth')}>
+                      Sign Up
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Mobile Menu Footer */}

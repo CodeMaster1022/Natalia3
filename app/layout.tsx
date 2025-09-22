@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
 import { ReduxProvider } from '@/components/providers/ReduxProvider'
 import { Toaster } from 'sonner'
+import { ClientLayout } from '@/components/ClientLayout'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -21,7 +22,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <ReduxProvider>
-          {children}
+          <ClientLayout>
+            {children}
+          </ClientLayout>
         </ReduxProvider>
         <Toaster position="top-right" richColors />
         <Analytics />

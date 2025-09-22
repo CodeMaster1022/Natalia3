@@ -1,11 +1,8 @@
-import { Header } from "@/components/header"
 import { Card, CardContent} from "@/components/ui/card"
 import { Footer } from "react-day-picker"
 export default function BlogPage() {
   return (
     <div className="min-h-screen">
-      <Header />
-      
       {/* Free Lessons Section */}
       <div className="container mx-auto px-4 py-16">
         {/* Title */}
