@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -133,7 +133,7 @@ const paymentMethods = [
   { id: 'paypal', name: 'PayPal', icon: Shield, description: 'Pay securely with your PayPal account' },
 ];
 
-export default function PaymentPage() {
+function PaymentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const courseId = searchParams?.get('course');
@@ -583,7 +583,7 @@ export default function PaymentPage() {
                     <Checkbox 
                       id="terms" 
                       checked={agreeToTerms}
-                      onCheckedChange={setAgreeToTerms}
+                      onCheckedChange={(checked) => setAgreeToTerms(checked === true)}
                     />
                     <Label htmlFor="terms" className="text-sm text-slate-600 leading-5">
                       I agree to the <a href="#" className="text-[#49BBBD] hover:underline">Terms of Service</a> and <a href="#" className="text-[#49BBBD] hover:underline">Privacy Policy</a>
@@ -632,5 +632,20 @@ export default function PaymentPage() {
         </div>
       </div>
     </ProtectedRoute>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 border-t-[#49BBBD] mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading payment page...</p>
+        </div>
+      </div>
+    }>
+      <PaymentContent />
+    </Suspense>
   );
 }
