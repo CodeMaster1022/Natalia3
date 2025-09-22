@@ -1,15 +1,23 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux"
+import { loginUser, registerUser, clearError } from "@/lib/store/authSlice"
+import { toast } from "sonner"
 import authImage from "@/public/image/auth.png"
 import registerImage from "@/public/image/register.png"
 import Image from "next/image"
 
 export default function LoginPage() {
+  const router = useRouter()
+  const dispatch = useAppDispatch()
+  const { user, isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth)
+
   const [activeTab, setActiveTab] = useState("login")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -18,6 +26,119 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      router.push("/dashboard")
+    }
+  }, [isAuthenticated, user, router])
+
+  // Show error toast
+  useEffect(() => {
+    if (error) {
+      toast.error(error)
+      dispatch(clearError())
+    }
+  }, [error, dispatch])
+
+  // Show success toast
+  useEffect(() => {
+    if (user && isAuthenticated) {
+      toast.success(`Welcome back, ${user.username}!`)
+    }
+  }, [user, isAuthenticated])
+
+  const validatePassword = (password: string) => {
+    if (password.length < 6) {
+      return "Password must be at least 6 characters long"
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      return "Password must contain at least one lowercase letter"
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return "Password must contain at least one uppercase letter"
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      return "Password must contain at least one number"
+    }
+    return null
+  }
+
+  const validateUsername = (username: string) => {
+    if (username.length < 3 || username.length > 30) {
+      return "Username must be between 3 and 30 characters"
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      return "Username can only contain letters, numbers, and underscores"
+    }
+    return null
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!username || !password) {
+      toast.error("Please fill in all fields")
+      return
+    }
+
+    try {
+      await dispatch(loginUser({ username, password })).unwrap()
+      router.push("/dashboard")
+    } catch (error) {
+      // Error is handled by useEffect above
+    }
+  }
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!username || !email || !password || !confirmPassword) {
+      toast.error("Please fill in all fields")
+      return
+    }
+
+    // Validate username
+    const usernameError = validateUsername(username)
+    if (usernameError) {
+      toast.error(usernameError)
+      return
+    }
+
+    // Validate password
+    const passwordError = validatePassword(password)
+    if (passwordError) {
+      toast.error(passwordError)
+      return
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match")
+      return
+    }
+
+    try {
+      await dispatch(registerUser({ 
+        username, 
+        email, 
+        password, 
+        confirmPassword 
+      })).unwrap()
+      router.push("/dashboard")
+    } catch (error) {
+      // Error is handled by useEffect above
+    }
+  }
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab)
+    setUsername("")
+    setEmail("")
+    setPassword("")
+    setConfirmPassword("")
+    dispatch(clearError())
+  }
 
   return (
     <div className="bg-white flex items-center justify-center">
@@ -46,7 +167,7 @@ export default function LoginPage() {
             {/* Tab Toggle */}
             <div className="bg-teal-100 rounded-full p-1 mb-4 lg:mb-6 xl:mb-8 flex">
               <button
-                onClick={() => setActiveTab("login")}
+                onClick={() => handleTabChange("login")}
                 className={`flex-1 py-2 lg:py-2.5 xl:py-3 px-3 lg:px-4 xl:px-6 rounded-full text-sm font-medium transition-all ${
                   activeTab === "login" ? "bg-teal-500 text-white shadow-md" : "text-teal-600 hover:text-teal-700"
                 }`}
@@ -54,7 +175,7 @@ export default function LoginPage() {
                 Login
               </button>
               <button
-                onClick={() => setActiveTab("register")}
+                onClick={() => handleTabChange("register")}
                 className={`flex-1 py-2 lg:py-2.5 xl:py-3 px-3 lg:px-4 xl:px-6 rounded-full text-sm font-medium transition-all ${
                   activeTab === "register" ? "bg-teal-500 text-white shadow-md" : "text-teal-600 hover:text-teal-700"
                 }`}
@@ -67,22 +188,26 @@ export default function LoginPage() {
               Lorem Ipsum is simply dummy text of the printing and typesetting industry.
             </p>
 
-            <form className="space-y-3 lg:space-y-4 xl:space-y-6">
+            <form 
+              className="space-y-3 lg:space-y-4 xl:space-y-6"
+              onSubmit={activeTab === "login" ? handleLogin : handleRegister}
+            >
               <div className="min-h-[300px] lg:min-h-[350px] xl:min-h-[400px] flex flex-col justify-between">
                 {activeTab === "login" ? (
                   <div className="space-y-3 lg:space-y-4 xl:space-y-6">
-                    {/* Username Field */}
+                    {/* Username/Email Field */}
                     <div>
                       <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                        User name
+                        Username or Email
                       </label>
                       <Input
                         id="username"
                         type="text"
-                        placeholder="Enter your User name"
+                        placeholder="Enter your username or email"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                        disabled={isLoading}
                       />
                     </div>
 
@@ -99,11 +224,13 @@ export default function LoginPage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 pr-12 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                          disabled={isLoading}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                          disabled={isLoading}
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -116,33 +243,21 @@ export default function LoginPage() {
 
                     <div className="flex-1" />
 
-                    {/* Remember Me & Forgot Password */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="remember"
-                          checked={rememberMe}
-                        //   onCheckedChange={setRememberMe}
-                          className="data-[state=checked]:bg-teal-500 data-[state=checked]:border-teal-500"
-                        />
-                        <label htmlFor="remember" className="text-sm text-gray-600">
-                          Remember me
-                        </label>
-                      </div>
-                      <button
-                        type="button"
-                        className="text-sm text-gray-600 hover:text-teal-600 transition-colors text-left sm:text-right"
-                      >
-                        Forgot Password ?
-                      </button>
-                    </div>
-
+      
                     {/* Login Button */}
                     <Button
                       type="submit"
-                      className="w-full bg-teal-500 hover:bg-teal-600 text-white py-2 lg:py-2.5 xl:py-3 rounded-full font-medium transition-colors text-sm lg:text-base"
+                      className="w-full bg-teal-500 hover:bg-teal-600 text-white py-2 lg:py-2.5 xl:py-3 rounded-full font-medium transition-colors text-sm lg:text-base disabled:opacity-50"
+                      disabled={isLoading}
                     >
-                      Login
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        "Login"
+                      )}
                     </Button>
                   </div>
                 ) : (
@@ -159,6 +274,7 @@ export default function LoginPage() {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                        disabled={isLoading}
                       />
                     </div>
 
@@ -174,6 +290,7 @@ export default function LoginPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                        disabled={isLoading}
                       />
                     </div>
 
@@ -190,11 +307,13 @@ export default function LoginPage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 pr-12 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                          disabled={isLoading}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                          disabled={isLoading}
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -218,11 +337,13 @@ export default function LoginPage() {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 pr-12 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                          disabled={isLoading}
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                          disabled={isLoading}
                         >
                           {showConfirmPassword ? (
                             <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -235,9 +356,17 @@ export default function LoginPage() {
                     {/* Register Button */}
                     <Button
                       type="submit"
-                      className="w-full bg-teal-500 hover:bg-teal-600 text-white py-2 lg:py-2.5 xl:py-3 rounded-full font-medium transition-colors text-sm lg:text-base"
+                      className="w-full bg-teal-500 hover:bg-teal-600 text-white py-2 lg:py-2.5 xl:py-3 rounded-full font-medium transition-colors text-sm lg:text-base disabled:opacity-50"
+                      disabled={isLoading}
                     >
-                      Register
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Registering...
+                        </>
+                      ) : (
+                        "Register"
+                      )}
                     </Button>
                   </div>
                 )}
