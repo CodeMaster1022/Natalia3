@@ -78,8 +78,11 @@ export function Header() {
                   <Link href="/my-lessons" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
                     My Lessons
                   </Link>
-                  <Link href="/my-lessons" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
+                  <Link href="/all-courses" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
                     English Courses
+                  </Link>
+                  <Link href="/free-lessons" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
+                    Free Courses
                   </Link>
                   <Link href="/payment" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
                     Payment
@@ -210,6 +213,12 @@ export function Header() {
                     <Link href="/my-lessons" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
                       My Lessons
                     </Link>
+                    <Link href="/free-lessons" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
+                      Free Courses
+                    </Link>
+                    <Link href="/all-courses" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
+                      All Courses
+                    </Link>
                     <Link href="/payment" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
                       Payment
                     </Link>
@@ -242,16 +251,6 @@ export function Header() {
                     <div className="px-4 py-3 bg-white/20 rounded-lg text-center">
                       <p className="text-white font-medium">Welcome, {user?.firstname} {user?.lastname}!</p>
                     </div>
-                    <button 
-                      className="w-full px-6 py-3 rounded-full text-white border-2 border-white/30 hover:border-white hover:bg-white hover:text-[#49BBBD] font-semibold transition-all duration-300 flex items-center justify-center gap-2" 
-                      onClick={() => {
-                        router.push('/dashboard')
-                        setIsMenuOpen(false)
-                      }}
-                    >
-                      <User className="w-4 h-4" />
-                      Dashboard
-                    </button>
                     <button 
                       className="w-full px-6 py-3 rounded-full text-white border-2 border-white/30 hover:border-white hover:bg-white hover:text-[#49BBBD] font-semibold transition-all duration-300 flex items-center justify-center gap-2" 
                       onClick={() => {
