@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAppSelector, useAppDispatch } from '@/lib/hooks/redux';
 import { ProfileFormData, LegalGuardian, SocialMedia } from '@/lib/types/profile';
 import { getProfile, createProfile, updateProfile, uploadProfilePhoto, clearProfileError } from '@/lib/store/profileSlice';
-import { User, Calendar, Phone, Mail, MapPin, Plus, X, Camera, Save, ArrowLeft } from 'lucide-react';
+import { User, Calendar, Phone, Mail, MapPin, Plus, X, Camera, Save, ArrowLeft, Shield, Users, Globe, Edit3, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { debugAuth } from '@/lib/utils/debugAuth';
@@ -26,6 +26,7 @@ export default function ProfilePage() {
   const { profile, isLoading: profileLoading, error } = useAppSelector((state) => state.profile);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
   
   const [formData, setFormData] = useState<ProfileFormData>({
     firstname: user?.firstname || '',
@@ -55,6 +56,11 @@ export default function ProfilePage() {
   });
 
   const [showAddGuardian, setShowAddGuardian] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    personal: true,
+    social: false,
+    guardians: false
+  });
 
   // Load profile data on mount
   useEffect(() => {
@@ -144,7 +150,7 @@ export default function ProfilePage() {
   };
 
   const addGuardian = () => {
-    if (!newGuardian.firstname || !newGuardian.lastname || !newGuardian.email || !newGuardian.phone) {
+    if (!newGuardian.firstname || !newGuardian.lastname || !newGuardian.email || !newGuardian.phone || !newGuardian.idNumber) {
       toast.error('Please fill in all required guardian fields');
       return;
     }
@@ -209,11 +215,14 @@ export default function ProfilePage() {
   };
 
   const handlePhotoUpload = async (file: File) => {
+    setPhotoUploading(true);
     try {
       await dispatch(uploadProfilePhoto(file)).unwrap();
       toast.success('Photo uploaded successfully');
     } catch (error: any) {
       toast.error(error || 'Failed to upload photo');
+    } finally {
+      setPhotoUploading(false);
     }
   };
 
@@ -221,16 +230,45 @@ export default function ProfilePage() {
     return `${firstname.charAt(0)}${lastname.charAt(0)}`.toUpperCase();
   };
 
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const getCompletionPercentage = () => {
+    const fields = [
+      formData.firstname,
+      formData.lastname,
+      formData.idNumber,
+      formData.birthday,
+      formData.gender !== 'prefer_not_to_say' ? formData.gender : '',
+      formData.photo,
+      formData.socialMedia.facebook || formData.socialMedia.twitter || formData.socialMedia.tiktok,
+      isMinor ? formData.legalGuardian.length > 0 : true
+    ];
+    
+    const completed = fields.filter(field => field && field !== '').length;
+    return Math.round((completed / fields.length) * 100);
+  };
+
   // Show loading state while fetching profile
   if (profileLoading && !profile) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gray-50">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#49BBBD] mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading profile...</p>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex items-center justify-center h-96">
+              <div className="text-center space-y-4">
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 border-t-[#49BBBD] mx-auto"></div>
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#49BBBD]/20 to-blue-500/20 animate-pulse"></div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-slate-600 font-medium">Loading your profile...</p>
+                  <p className="text-sm text-slate-500">This won't take long</p>
+                </div>
               </div>
             </div>
           </div>
@@ -241,330 +279,528 @@ export default function ProfilePage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.back()}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-                <p className="text-gray-600 mt-1">Manage your personal information</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              {!isEditing ? (
-                <Button onClick={() => setIsEditing(true)} className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  Edit Profile
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Enhanced Header */}
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.back()}
+                  className="flex items-center gap-2 hover:bg-white/60 transition-all duration-200"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
                 </Button>
-              ) : (
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSave} disabled={isLoading || profileLoading} className="flex items-center gap-2">
-                    <Save className="w-4 h-4" />
-                    {isLoading || profileLoading ? 'Saving...' : 'Save Changes'}
-                  </Button>
+                <div className="space-y-1">
+                  <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+                    My Profile
+                  </h1>
+                  <p className="text-slate-600">Manage your personal information and preferences</p>
                 </div>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Profile Picture & Basic Info */}
-            <div className="lg:col-span-1">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="text-center">
-                    <div className="relative inline-block">
-                      <Avatar className="w-32 h-32 mx-auto">
-                        <AvatarImage src={formData.photo} />
-                        <AvatarFallback className="text-2xl">
-                          {formData.firstname && formData.lastname 
-                            ? getInitials(formData.firstname, formData.lastname)
-                            : user?.firstname?.charAt(0).toUpperCase() || 'U'
-                          }
-                        </AvatarFallback>
-                      </Avatar>
-                      {isEditing && (
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {!isEditing ? (
+                  <Button 
+                    onClick={() => setIsEditing(true)} 
+                    className="bg-gradient-to-r from-[#49BBBD] to-blue-500 hover:from-[#3da5a7] hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Edit Profile
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsEditing(false)}
+                      className="hover:bg-slate-50 transition-all duration-200"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleSave} 
+                      disabled={isLoading || profileLoading} 
+                      className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                    >
+                      {isLoading || profileLoading ? (
                         <>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                handlePhotoUpload(file);
-                              }
-                            }}
-                            className="hidden"
-                            id="photo-upload"
-                          />
-                          <Button
-                            size="sm"
-                            className="absolute bottom-0 right-0 rounded-full w-10 h-10 p-0"
-                            onClick={() => document.getElementById('photo-upload')?.click()}
-                            disabled={profileLoading}
-                          >
-                            <Camera className="w-4 h-4" />
-                          </Button>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Save Changes
                         </>
                       )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Profile Completion Progress */}
+            <Card className="bg-white/60 backdrop-blur-sm border-white/20 shadow-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-gradient-to-r from-[#49BBBD]/20 to-blue-500/20 rounded-lg">
+                      <User className="w-4 h-4 text-[#49BBBD]" />
+                    </div>
+                    <span className="font-semibold text-slate-700">Profile Completion</span>
+                  </div>
+                  <Badge variant={getCompletionPercentage() === 100 ? "default" : "secondary"} className="font-medium">
+                    {getCompletionPercentage()}%
+                  </Badge>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#49BBBD] to-blue-500 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${getCompletionPercentage()}%` }}
+                  />
+                </div>
+                <p className="text-sm text-slate-600 mt-2">
+                  Complete your profile to unlock all features
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Enhanced Profile Picture & Basic Info */}
+            <div className="lg:col-span-1">
+              <Card className="bg-white/60 backdrop-blur-sm border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 sticky top-8">
+                <CardContent className="p-6">
+                  <div className="text-center space-y-6">
+                    <div className="relative inline-block">
+                      <div className="relative">
+                        <Avatar className="w-32 h-32 mx-auto ring-4 ring-white/50 shadow-2xl">
+                          <AvatarImage src={formData.photo} className="object-cover" />
+                          <AvatarFallback className="text-2xl bg-gradient-to-br from-[#49BBBD] to-blue-500 text-white">
+                            {formData.firstname && formData.lastname 
+                              ? getInitials(formData.firstname, formData.lastname)
+                              : user?.firstname?.charAt(0).toUpperCase() || 'U'
+                            }
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        {isEditing && (
+                          <>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  handlePhotoUpload(file);
+                                }
+                              }}
+                              className="hidden"
+                              id="photo-upload"
+                            />
+                            <Button
+                              size="sm"
+                              className="absolute -bottom-2 -right-2 rounded-full w-12 h-12 p-0 bg-gradient-to-r from-[#49BBBD] to-blue-500 hover:from-[#3da5a7] hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200"
+                              onClick={() => document.getElementById('photo-upload')?.click()}
+                              disabled={photoUploading}
+                            >
+                              {photoUploading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Camera className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                     
-                    <div className="mt-4">
-                      <h3 className="text-xl font-semibold">
-                        {formData.firstname && formData.lastname 
-                          ? `${formData.firstname} ${formData.lastname}`
-                          : user?.firstname && user?.lastname ? `${user.firstname} ${user.lastname}` : 'User'
-                        }
-                      </h3>
-                      <p className="text-gray-600">{user?.email}</p>
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="text-xl font-bold text-slate-900">
+                          {formData.firstname && formData.lastname 
+                            ? `${formData.firstname} ${formData.lastname}`
+                            : user?.firstname && user?.lastname ? `${user.firstname} ${user.lastname}` : 'User'
+                          }
+                        </h3>
+                        <p className="text-slate-600 flex items-center justify-center gap-2 mt-1">
+                          <Mail className="w-4 h-4" />
+                          {user?.email}
+                        </p>
+                      </div>
+                      
                       {age !== null && (
-                        <div className="mt-2">
-                          <Badge variant={isMinor ? "destructive" : "secondary"}>
+                        <div className="flex justify-center">
+                          <Badge 
+                            variant={isMinor ? "destructive" : "secondary"} 
+                            className="flex items-center gap-1 px-3 py-1"
+                          >
+                            <Calendar className="w-3 h-3" />
                             {age} years old {isMinor && '(Minor)'}
                           </Badge>
                         </div>
                       )}
-                    </div>
-                  </div>
-                                  </CardContent>
-                </Card>
-              
-            </div>
 
-            {/* Profile Form */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Personal Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Personal Information</CardTitle>
-                  <CardDescription>Your basic personal details</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="firstname">First Name *</Label>
-                      <Input
-                        id="firstname"
-                        value={formData.firstname}
-                        onChange={(e) => handleInputChange('firstname', e.target.value)}
-                        disabled={!isEditing}
-                        placeholder="Enter your first name"
-                      />
+                      {isMinor && (
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <div className="flex items-center gap-2 text-amber-800">
+                            <AlertCircle className="w-4 h-4" />
+                            <span className="text-sm font-medium">Guardian Required</span>
+                          </div>
+                          <p className="text-xs text-amber-700 mt-1">
+                            Legal guardian information is mandatory for users under 18
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <Label htmlFor="lastname">Last Name *</Label>
-                      <Input
-                        id="lastname"
-                        value={formData.lastname}
-                        onChange={(e) => handleInputChange('lastname', e.target.value)}
-                        disabled={!isEditing}
-                        placeholder="Enter your last name"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="idNumber">ID Number *</Label>
-                      <Input
-                        id="idNumber"
-                        value={formData.idNumber}
-                        onChange={(e) => handleInputChange('idNumber', e.target.value)}
-                        disabled={!isEditing}
-                        placeholder="Enter your ID number"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="gender">Gender *</Label>
-                      <Select
-                        value={formData.gender}
-                        onValueChange={(value) => handleInputChange('gender', value)}
-                        disabled={!isEditing}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                          <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="birthday">Birthday *</Label>
-                    <Input
-                      id="birthday"
-                      type="date"
-                      value={formData.birthday}
-                      onChange={(e) => handleInputChange('birthday', e.target.value)}
-                      disabled={!isEditing}
-                    />
                   </div>
                 </CardContent>
+              </Card>
+            </div>
+
+            {/* Enhanced Profile Form */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* Personal Information */}
+              <Card className="bg-white/60 backdrop-blur-sm border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <CardHeader 
+                  className="cursor-pointer select-none hover:bg-white/20 transition-colors duration-200 rounded-t-lg"
+                  onClick={() => toggleSection('personal')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-lg">
+                        <User className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl">Personal Information</CardTitle>
+                        <CardDescription>Your basic personal details and identification</CardDescription>
+                      </div>
+                    </div>
+                    <div className={`transform transition-transform duration-200 ${expandedSections.personal ? 'rotate-180' : ''}`}>
+                      <ArrowLeft className="w-5 h-5 text-slate-400 -rotate-90" />
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                {expandedSections.personal && (
+                  <CardContent className="space-y-6 animate-in slide-in-from-top-2 duration-300">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstname" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                          First Name <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="firstname"
+                          value={formData.firstname}
+                          onChange={(e) => handleInputChange('firstname', e.target.value)}
+                          disabled={!isEditing}
+                          placeholder="Enter your first name"
+                          className="bg-white/50 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastname" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                          Last Name <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="lastname"
+                          value={formData.lastname}
+                          onChange={(e) => handleInputChange('lastname', e.target.value)}
+                          disabled={!isEditing}
+                          placeholder="Enter your last name"
+                          className="bg-white/50 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="idNumber" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                          ID Number <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="idNumber"
+                          value={formData.idNumber}
+                          onChange={(e) => handleInputChange('idNumber', e.target.value)}
+                          disabled={!isEditing}
+                          placeholder="Enter your ID number"
+                          className="bg-white/50 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="gender" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                          Gender <span className="text-red-500">*</span>
+                        </Label>
+                        <Select
+                          value={formData.gender}
+                          onValueChange={(value) => handleInputChange('gender', value)}
+                          disabled={!isEditing}
+                        >
+                          <SelectTrigger className="bg-white/50 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200">
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                            <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="birthday" className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                        Birthday <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="birthday"
+                        type="date"
+                        value={formData.birthday}
+                        onChange={(e) => handleInputChange('birthday', e.target.value)}
+                        disabled={!isEditing}
+                        className="bg-white/50 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
+                      />
+                    </div>
+                  </CardContent>
+                )}
               </Card>
 
               {/* Social Media */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Social Media</CardTitle>
-                  <CardDescription>Connect your social media profiles</CardDescription>
+              <Card className="bg-white/60 backdrop-blur-sm border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <CardHeader 
+                  className="cursor-pointer select-none hover:bg-white/20 transition-colors duration-200 rounded-t-lg"
+                  onClick={() => toggleSection('social')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg">
+                        <Globe className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl">Social Media</CardTitle>
+                        <CardDescription>Connect your social media profiles</CardDescription>
+                      </div>
+                    </div>
+                    <div className={`transform transition-transform duration-200 ${expandedSections.social ? 'rotate-180' : ''}`}>
+                      <ArrowLeft className="w-5 h-5 text-slate-400 -rotate-90" />
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="facebook">Facebook</Label>
-                    <Input
-                      id="facebook"
-                      value={formData.socialMedia.facebook}
-                      onChange={(e) => handleSocialMediaChange('facebook', e.target.value)}
-                      disabled={!isEditing}
-                      placeholder="https://facebook.com/yourprofile"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="twitter">Twitter/X</Label>
-                    <Input
-                      id="twitter"
-                      value={formData.socialMedia.twitter}
-                      onChange={(e) => handleSocialMediaChange('twitter', e.target.value)}
-                      disabled={!isEditing}
-                      placeholder="https://twitter.com/yourprofile"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="tiktok">TikTok</Label>
-                    <Input
-                      id="tiktok"
-                      value={formData.socialMedia.tiktok}
-                      onChange={(e) => handleSocialMediaChange('tiktok', e.target.value)}
-                      disabled={!isEditing}
-                      placeholder="https://tiktok.com/@yourprofile"
-                    />
-                  </div>
-                </CardContent>
+                
+                {expandedSections.social && (
+                  <CardContent className="space-y-6 animate-in slide-in-from-top-2 duration-300">
+                    <div className="space-y-2">
+                      <Label htmlFor="facebook" className="text-sm font-medium text-slate-700">Facebook</Label>
+                      <Input
+                        id="facebook"
+                        value={formData.socialMedia.facebook}
+                        onChange={(e) => handleSocialMediaChange('facebook', e.target.value)}
+                        disabled={!isEditing}
+                        placeholder="https://facebook.com/yourprofile"
+                        className="bg-white/50 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="twitter" className="text-sm font-medium text-slate-700">Twitter/X</Label>
+                      <Input
+                        id="twitter"
+                        value={formData.socialMedia.twitter}
+                        onChange={(e) => handleSocialMediaChange('twitter', e.target.value)}
+                        disabled={!isEditing}
+                        placeholder="https://twitter.com/yourprofile"
+                        className="bg-white/50 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tiktok" className="text-sm font-medium text-slate-700">TikTok</Label>
+                      <Input
+                        id="tiktok"
+                        value={formData.socialMedia.tiktok}
+                        onChange={(e) => handleSocialMediaChange('tiktok', e.target.value)}
+                        disabled={!isEditing}
+                        placeholder="https://tiktok.com/@yourprofile"
+                        className="bg-white/50 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
+                      />
+                    </div>
+                  </CardContent>
+                )}
               </Card>
 
               {/* Legal Guardians */}
-              <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
+              <Card className="bg-white/60 backdrop-blur-sm border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <CardHeader 
+                  className="cursor-pointer select-none hover:bg-white/20 transition-colors duration-200 rounded-t-lg"
+                  onClick={() => toggleSection('guardians')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-lg">
+                        <Shield className="w-5 h-5 text-emerald-600" />
+                      </div>
                       <div>
-                        <CardTitle className="flex items-center gap-2">
+                        <CardTitle className="flex items-center gap-2 text-xl">
                           Legal Guardians
-                          {isMinor && <Badge variant="destructive">Required for minors</Badge>}
+                          {isMinor && <Badge variant="destructive" className="text-xs">Required for minors</Badge>}
                         </CardTitle>
                         <CardDescription>
                           {isMinor ? 'Legal guardian information is required for users under 18' : 'Your legal guardian information'}
                         </CardDescription>
                       </div>
+                    </div>
+                    <div className="flex items-center gap-2">
                       {isEditing && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowAddGuardian(true)}
-                          className="flex items-center gap-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowAddGuardian(true);
+                          }}
+                          className="flex items-center gap-2 hover:bg-white/60 transition-all duration-200"
                         >
                           <Plus className="w-4 h-4" />
                           Add Guardian
                         </Button>
                       )}
+                      <div className={`transform transition-transform duration-200 ${expandedSections.guardians ? 'rotate-180' : ''}`}>
+                        <ArrowLeft className="w-5 h-5 text-slate-400 -rotate-90" />
+                      </div>
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                  </div>
+                </CardHeader>
+                
+                {expandedSections.guardians && (
+                  <CardContent className="space-y-6 animate-in slide-in-from-top-2 duration-300">
                     {formData.legalGuardian.map((guardian, index) => (
-                      <div key={index} className="p-4 border rounded-lg space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium">
-                            {guardian.firstname} {guardian.lastname}
-                          </h4>
+                      <div key={index} className="p-6 bg-gradient-to-r from-slate-50 to-blue-50/50 border border-slate-200 rounded-xl space-y-4 hover:shadow-md transition-all duration-200">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gradient-to-r from-[#49BBBD]/20 to-blue-500/20 rounded-lg">
+                              <Users className="w-4 h-4 text-[#49BBBD]" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-slate-900 text-lg">
+                                {guardian.firstname} {guardian.lastname}
+                              </h4>
+                              <Badge variant="outline" className="mt-1 capitalize bg-orange-400 text-white">
+                                {guardian.relationship.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                          </div>
                           {isEditing && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => removeGuardian(index)}
-                              className="text-red-600 hover:text-red-700"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200"
                             >
                               <X className="w-4 h-4" />
                             </Button>
                           )}
                         </div>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p><strong>ID Number:</strong> {guardian.idNumber}</p>
-                          <p><strong>Gender:</strong> {guardian.gender}</p>
-                          <p><strong>Relationship:</strong> {guardian.relationship}</p>
-                          <p><strong>Phone:</strong> {guardian.phone}</p>
-                          <p><strong>Email:</strong> {guardian.email}</p>
-                          <p><strong>Address:</strong> {guardian.address}</p>
-                          <p><strong>Country:</strong> {guardian.country}</p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <User className="w-4 h-4" />
+                              <span><strong>ID Number:</strong> {guardian.idNumber}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <span><strong>Gender:</strong> {guardian.gender}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <Phone className="w-4 h-4" />
+                              <span><strong>Phone:</strong> {guardian.phone}</span>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <Mail className="w-4 h-4" />
+                              <span><strong>Email:</strong> {guardian.email}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <MapPin className="w-4 h-4" />
+                              <span><strong>Address:</strong> {guardian.address}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <Globe className="w-4 h-4" />
+                              <span><strong>Country:</strong> {guardian.country}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
 
-                    {/* Add Guardian Form */}
+                    {/* Enhanced Add Guardian Form */}
                     {showAddGuardian && isEditing && (
-                      <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg space-y-4">
+                      <div className="p-6 border-2 border-dashed border-[#49BBBD]/30 bg-gradient-to-r from-[#49BBBD]/5 to-blue-500/5 rounded-xl space-y-6 animate-in slide-in-from-top-2 duration-300">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-medium">Add New Guardian</h4>
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gradient-to-r from-[#49BBBD]/20 to-blue-500/20 rounded-lg">
+                              <Plus className="w-4 h-4 text-[#49BBBD]" />
+                            </div>
+                            <h4 className="font-semibold text-slate-900 text-lg">Add New Guardian</h4>
+                          </div>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setShowAddGuardian(false)}
+                            className="hover:bg-white/60 transition-all duration-200"
                           >
                             <X className="w-4 h-4" />
                           </Button>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label>First Name *</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                              First Name <span className="text-red-500">*</span>
+                            </Label>
                             <Input
                               value={newGuardian.firstname}
                               onChange={(e) => handleGuardianChange('firstname', e.target.value)}
                               placeholder="Guardian's first name"
+                              className="bg-white/70 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
                             />
                           </div>
-                          <div>
-                            <Label>Last Name *</Label>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                              Last Name <span className="text-red-500">*</span>
+                            </Label>
                             <Input
                               value={newGuardian.lastname}
                               onChange={(e) => handleGuardianChange('lastname', e.target.value)}
                               placeholder="Guardian's last name"
+                              className="bg-white/70 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
                             />
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label>ID Number *</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                              ID Number <span className="text-red-500">*</span>
+                            </Label>
                             <Input
                               value={newGuardian.idNumber}
                               onChange={(e) => handleGuardianChange('idNumber', e.target.value)}
                               placeholder="Guardian's ID number"
+                              className="bg-white/70 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
                             />
                           </div>
-                          <div>
-                            <Label>Gender *</Label>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                              Gender <span className="text-red-500">*</span>
+                            </Label>
                             <Select
                               value={newGuardian.gender}
                               onValueChange={(value) => handleGuardianChange('gender', value)}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -577,14 +813,16 @@ export default function ProfilePage() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label>Relationship *</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                              Relationship <span className="text-red-500">*</span>
+                            </Label>
                             <Select
                               value={newGuardian.relationship}
                               onValueChange={(value) => handleGuardianChange('relationship', value)}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -598,58 +836,78 @@ export default function ProfilePage() {
                               </SelectContent>
                             </Select>
                           </div>
-                          <div>
-                            <Label>Phone *</Label>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                              Phone <span className="text-red-500">*</span>
+                            </Label>
                             <Input
                               value={newGuardian.phone}
                               onChange={(e) => handleGuardianChange('phone', e.target.value)}
                               placeholder="Guardian's phone number"
+                              className="bg-white/70 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
                             />
                           </div>
                         </div>
 
-                        <div>
-                          <Label>Email *</Label>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                            Email <span className="text-red-500">*</span>
+                          </Label>
                           <Input
                             type="email"
                             value={newGuardian.email}
                             onChange={(e) => handleGuardianChange('email', e.target.value)}
                             placeholder="Guardian's email address"
+                            className="bg-white/70 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
                           />
                         </div>
 
-                        <div>
-                          <Label>Address *</Label>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                            Address <span className="text-red-500">*</span>
+                          </Label>
                           <Textarea
                             value={newGuardian.address}
                             onChange={(e) => handleGuardianChange('address', e.target.value)}
                             placeholder="Guardian's address"
                             rows={2}
+                            className="bg-white/70 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200 resize-none"
                           />
                         </div>
 
-                        <div>
-                          <Label>Country *</Label>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                            Country <span className="text-red-500">*</span>
+                          </Label>
                           <Input
                             value={newGuardian.country}
                             onChange={(e) => handleGuardianChange('country', e.target.value)}
                             placeholder="Guardian's country"
+                            className="bg-white/70 border-slate-200 focus:border-[#49BBBD] focus:ring-[#49BBBD]/20 transition-all duration-200"
                           />
                         </div>
 
-                        <div className="flex gap-2">
-                          <Button onClick={addGuardian} size="sm">
+                        <div className="flex gap-3 pt-4">
+                          <Button 
+                            onClick={addGuardian} 
+                            className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                          >
+                            <Plus className="w-4 h-4" />
                             Add Guardian
                           </Button>
-                          <Button variant="outline" onClick={() => setShowAddGuardian(false)} size="sm">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setShowAddGuardian(false)}
+                            className="hover:bg-slate-50 transition-all duration-200"
+                          >
                             Cancel
                           </Button>
                         </div>
                       </div>
                     )}
                   </CardContent>
-                </Card>
-              
+                )}
+              </Card>
             </div>
           </div>
         </div>

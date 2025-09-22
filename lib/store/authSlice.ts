@@ -7,7 +7,7 @@ const initialState: AuthState = {
   user: null,
   token: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true, // Start with loading true to prevent premature redirects
   error: null,
 };
 
@@ -91,6 +91,7 @@ const authSlice = createSlice({
         state.token = token;
         state.isAuthenticated = true;
       }
+      state.isLoading = false; // Set loading to false after initialization
     },
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;

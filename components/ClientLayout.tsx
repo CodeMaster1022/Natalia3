@@ -12,7 +12,7 @@ export function ClientLayout({
   
   return (
     <>
-      {pathname !== "/auth" && <Header />}
+      {pathname !== "/auth" && pathname !== "/" && <Header />}
       {children}
     </>
   )

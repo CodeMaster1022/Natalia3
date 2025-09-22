@@ -14,6 +14,7 @@ import childImage from "@/public/image/child.png"
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#49BBBD] to-[#3FA9AB] relative overflow-hidden">
+      <Header />
       <main className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 lg:py-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[calc(100vh-120px)]">

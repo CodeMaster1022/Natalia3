@@ -54,7 +54,7 @@ export function Header() {
   }
 
   return (
-    <header className={`sticky top-0 w-full z-50 transition-all duration-300 ${
+    <header className={`w-full z-50 transition-all duration-300 ${
       isScrolled ? 'bg-white/10 backdrop-blur-lg shadow-lg' : 'bg-transparent'
     }`}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -70,21 +70,40 @@ export function Header() {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center justify-center flex-1 px-8">
             <div className="flex items-center space-x-8 xl:space-x-12">
-              <Link href="/" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
-                Home
-              </Link>
-              <Link href="#" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
-                English Courses
-              </Link>
-              <Link href="/free-lessons" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
-                Free Lessons
-              </Link>
-              <Link href="#" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
-                About Us
-              </Link>
-              <Link href="#" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
-                Contact Us
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/dashboard" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
+                    Dashboard
+                  </Link>
+                  <Link href="/my-lessons" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
+                    My Lessons
+                  </Link>
+                  <Link href="/my-lessons" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
+                    English Courses
+                  </Link>
+                  <Link href="/payment" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
+                    Payment
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
+                    Home
+                  </Link>
+                  <Link href="#" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
+                    English Courses
+                  </Link>
+                  <Link href="/free-lessons" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
+                    Free Lessons
+                  </Link>
+                  <Link href="#" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
+                    About Us
+                  </Link>
+                  <Link href="#" className="text-white hover:text-orange-400 transition-colors text-lg font-medium">
+                    Contact Us
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -102,16 +121,7 @@ export function Header() {
                 
                 {showUserMenu && (
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border overflow-hidden z-50">
-                    <button
-                      onClick={() => {
-                        router.push('/dashboard')
-                        setShowUserMenu(false)
-                      }}
-                      className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
-                    >
-                      <User className="w-4 h-4" />
-                      Dashboard
-                    </button>
+                    <div className="border-t border-gray-100"></div>
                     <button
                       onClick={() => {
                         router.push('/profile')
@@ -192,21 +202,37 @@ export function Header() {
             {/* Menu Items */}
             <div className="flex flex-col p-4">
               <nav className="space-y-2">
-                <Link href="/" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
-                  Home
-                </Link>
-                <Link href="#" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
-                  English Courses
-                </Link>
-                <Link href="/free-lessons" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
-                  Free Lessons
-                </Link>
-                <Link href="#" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
-                  About Us
-                </Link>
-                <Link href="#" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
-                  Contact Us
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    <Link href="/dashboard" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
+                      Dashboard
+                    </Link>
+                    <Link href="/my-lessons" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
+                      My Lessons
+                    </Link>
+                    <Link href="/payment" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
+                      Payment
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
+                      Home
+                    </Link>
+                    <Link href="#" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
+                      English Courses
+                    </Link>
+                    <Link href="/free-lessons" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
+                      Free Lessons
+                    </Link>
+                    <Link href="#" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
+                      About Us
+                    </Link>
+                    <Link href="#" className="block px-4 py-3 text-white hover:bg-white/20 rounded-lg transition-colors text-lg font-medium">
+                      Contact Us
+                    </Link>
+                  </>
+                )}
               </nav>
 
               {/* Mobile Auth Buttons */}

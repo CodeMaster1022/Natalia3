@@ -29,9 +29,9 @@ export function ProtectedRoute({
     if (!isLoading) {
       if (requireAuth && !isAuthenticated) {
         router.push(redirectTo);
-      } else if (!requireAuth && isAuthenticated) {
-        router.push('/dashboard');
       }
+      // Remove automatic redirect to dashboard for authenticated users on public pages
+      // This allows users to stay on the current page after refresh
     }
   }, [isAuthenticated, isLoading, requireAuth, redirectTo, router]);
 
@@ -56,9 +56,7 @@ export function ProtectedRoute({
     return null;
   }
 
-  if (!requireAuth && isAuthenticated) {
-    return null;
-  }
+  // Allow authenticated users to see public pages (removed blocking logic)
 
   return <>{children}</>;
 }
