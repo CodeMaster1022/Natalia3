@@ -82,7 +82,7 @@ export default function LoginPage() {
                         placeholder="Enter your User name"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                        className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
                       />
                     </div>
 
@@ -98,7 +98,7 @@ export default function LoginPage() {
                           placeholder="Enter your Password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="w-full px-4 py-2 lg:py-2.5 xl:py-3 pr-12 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                          className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 pr-12 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
                         />
                         <button
                           type="button"
@@ -158,7 +158,7 @@ export default function LoginPage() {
                         placeholder="Enter your User name"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                        className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
                       />
                     </div>
 
@@ -173,7 +173,7 @@ export default function LoginPage() {
                         placeholder="Enter your Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                        className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
                       />
                     </div>
 
@@ -189,7 +189,7 @@ export default function LoginPage() {
                           placeholder="Enter your Password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="w-full px-4 py-2 lg:py-2.5 xl:py-3 pr-12 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                          className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 pr-12 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
                         />
                         <button
                           type="button"
@@ -217,7 +217,7 @@ export default function LoginPage() {
                           placeholder="Confirm your Password"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full px-4 py-2 lg:py-2.5 xl:py-3 pr-12 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                          className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 pr-12 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
                         />
                         <button
                           type="button"
