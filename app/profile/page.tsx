@@ -28,8 +28,8 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState<ProfileFormData>({
-    firstname: '',
-    lastname: '',
+    firstname: user?.firstname || '',
+    lastname: user?.lastname || '',
     idNumber: '',
     gender: 'prefer_not_to_say',
     birthday: '',
@@ -69,8 +69,8 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile) {
       setFormData({
-        firstname: profile.firstname || '',
-        lastname: profile.lastname || '',
+        firstname: profile.firstname || user?.firstname || '',
+        lastname: profile.lastname || user?.lastname || '',
         idNumber: profile.idNumber || '',
         gender: profile.gender || 'prefer_not_to_say',
         birthday: profile.birthday ? profile.birthday.split('T')[0] : '', // Convert to YYYY-MM-DD format
@@ -83,7 +83,18 @@ export default function ProfilePage() {
         legalGuardian: profile.legalGuardian || []
       });
     }
-  }, [profile]);
+  }, [profile, user]);
+
+  // Update form data when user data changes (if no profile exists)
+  useEffect(() => {
+    if (!profile && user) {
+      setFormData(prev => ({
+        ...prev,
+        firstname: user.firstname || prev.firstname,
+        lastname: user.lastname || prev.lastname
+      }));
+    }
+  }, [user, profile]);
 
   // Clear errors when component unmounts
   useEffect(() => {
@@ -281,7 +292,7 @@ export default function ProfilePage() {
                         <AvatarFallback className="text-2xl">
                           {formData.firstname && formData.lastname 
                             ? getInitials(formData.firstname, formData.lastname)
-                            : user?.username?.charAt(0).toUpperCase() || 'U'
+                            : user?.firstname?.charAt(0).toUpperCase() || 'U'
                           }
                         </AvatarFallback>
                       </Avatar>
@@ -315,7 +326,7 @@ export default function ProfilePage() {
                       <h3 className="text-xl font-semibold">
                         {formData.firstname && formData.lastname 
                           ? `${formData.firstname} ${formData.lastname}`
-                          : user?.username || 'User'
+                          : user?.firstname && user?.lastname ? `${user.firstname} ${user.lastname}` : 'User'
                         }
                       </h3>
                       <p className="text-gray-600">{user?.email}</p>

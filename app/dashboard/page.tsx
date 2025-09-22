@@ -17,7 +17,7 @@ export default function DashboardPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-2">Welcome back, {user?.username}!</p>
+            <p className="text-gray-600 mt-2">Welcome back, {user?.firstname} {user?.lastname}!</p>
           </div>
 
           {/* User Profile Card */}
@@ -94,7 +94,7 @@ export default function DashboardPage() {
                   Your account details:
                 </p>
                 <ul className="list-disc list-inside space-y-2 text-sm text-gray-600">
-                  <li>Username: {user?.username}</li>
+                  <li>Name: {user?.firstname} {user?.lastname}</li>
                   <li>Email: {user?.email}</li>
                   <li>Role: {user?.role}</li>
                   <li>Status: {user?.status}</li>

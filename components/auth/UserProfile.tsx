@@ -26,7 +26,7 @@ export function UserProfile() {
           <User className="w-5 h-5 text-white" />
         </div>
         <div>
-          <p className="font-medium text-gray-900">{user.username}</p>
+          <p className="font-medium text-gray-900">{user.firstname} {user.lastname}</p>
           <p className="text-sm text-gray-500">{user.email}</p>
           <p className="text-xs text-gray-400 capitalize">
             {user.role} • {user.status}

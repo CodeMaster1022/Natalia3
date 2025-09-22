@@ -1,6 +1,7 @@
 export interface User {
   _id: string;
-  username: string;
+  firstname: string;
+  lastname: string;
   email: string;
   role: 'user' | 'admin' | 'moderator';
   status: 'review' | 'failed' | 'success';
@@ -19,12 +20,13 @@ export interface AuthState {
 }
 
 export interface LoginCredentials {
-  username: string;
+  email: string;
   password: string;
 }
 
 export interface RegisterCredentials {
-  username: string;
+  firstname: string;
+  lastname: string;
   email: string;
   password: string;
   confirmPassword: string;

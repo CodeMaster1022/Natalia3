@@ -21,7 +21,8 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState("login")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [username, setUsername] = useState("")
+  const [firstname, setFirstname] = useState("")
+  const [lastname, setLastname] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -45,7 +46,7 @@ export default function LoginPage() {
   // Show success toast
   useEffect(() => {
     if (user && isAuthenticated) {
-      toast.success(`Welcome back, ${user.username}!`)
+      toast.success(`Welcome back, ${user.firstname} ${user.lastname}!`)
     }
   }, [user, isAuthenticated])
 
@@ -65,12 +66,12 @@ export default function LoginPage() {
     return null
   }
 
-  const validateUsername = (username: string) => {
-    if (username.length < 3 || username.length > 30) {
-      return "Username must be between 3 and 30 characters"
+  const validateName = (name: string) => {
+    if (name.length < 2 || name.length > 50) {
+      return "Name must be between 2 and 50 characters"
     }
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      return "Username can only contain letters, numbers, and underscores"
+    if (!/^[a-zA-Z\s'-]+$/.test(name)) {
+      return "Name can only contain letters, spaces, hyphens, and apostrophes"
     }
     return null
   }
@@ -78,13 +79,13 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!username || !password) {
+    if (!email || !password) {
       toast.error("Please fill in all fields")
       return
     }
 
     try {
-      await dispatch(loginUser({ username, password })).unwrap()
+      await dispatch(loginUser({ email, password })).unwrap()
       router.push("/dashboard")
     } catch (error) {
       // Error is handled by useEffect above
@@ -94,15 +95,22 @@ export default function LoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!username || !email || !password || !confirmPassword) {
+    if (!firstname || !lastname || !email || !password || !confirmPassword) {
       toast.error("Please fill in all fields")
       return
     }
 
-    // Validate username
-    const usernameError = validateUsername(username)
-    if (usernameError) {
-      toast.error(usernameError)
+    // Validate firstname
+    const firstnameError = validateName(firstname)
+    if (firstnameError) {
+      toast.error(`First name: ${firstnameError}`)
+      return
+    }
+
+    // Validate lastname
+    const lastnameError = validateName(lastname)
+    if (lastnameError) {
+      toast.error(`Last name: ${lastnameError}`)
       return
     }
 
@@ -120,7 +128,8 @@ export default function LoginPage() {
 
     try {
       await dispatch(registerUser({ 
-        username, 
+        firstname, 
+        lastname,
         email, 
         password, 
         confirmPassword 
@@ -133,7 +142,8 @@ export default function LoginPage() {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab)
-    setUsername("")
+    setFirstname("")
+    setLastname("")
     setEmail("")
     setPassword("")
     setConfirmPassword("")
@@ -195,17 +205,17 @@ export default function LoginPage() {
               <div className="min-h-[300px] lg:min-h-[350px] xl:min-h-[400px] flex flex-col justify-between">
                 {activeTab === "login" ? (
                   <div className="space-y-3 lg:space-y-4 xl:space-y-6">
-                    {/* Username/Email Field */}
+                    {/* Email Field */}
                     <div>
-                      <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                        Username or Email
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                        Email
                       </label>
                       <Input
-                        id="username"
-                        type="text"
-                        placeholder="Enter your username or email"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        id="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
                         disabled={isLoading}
                       />
@@ -262,29 +272,47 @@ export default function LoginPage() {
                   </div>
                 ) : (
                   <div className="space-y-3 lg:space-y-4 xl:space-y-6">
-                    {/* Username Field */}
-                    <div>
-                      <label htmlFor="reg-username" className="block text-sm font-medium text-gray-700 mb-2">
-                        User name
-                      </label>
-                      <Input
-                        id="reg-username"
-                        type="text"
-                        placeholder="Enter your User name"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
-                        disabled={isLoading}
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* First Name Field */}
+                      <div>
+                        <label htmlFor="firstname" className="block text-sm font-medium text-gray-700 mb-2">
+                          First Name
+                        </label>
+                        <Input
+                          id="firstname"
+                          type="text"
+                          placeholder="Enter your first name"
+                          value={firstname}
+                          onChange={(e) => setFirstname(e.target.value)}
+                          className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                          disabled={isLoading}
+                        />
+                      </div>
+
+                      {/* Last Name Field */}
+                      <div>
+                        <label htmlFor="lastname" className="block text-sm font-medium text-gray-700 mb-2">
+                          Last Name
+                        </label>
+                        <Input
+                          id="lastname"
+                          type="text"
+                          placeholder="Enter your last name"
+                          value={lastname}
+                          onChange={(e) => setLastname(e.target.value)}
+                          className="text-black w-full px-4 py-2 lg:py-2.5 xl:py-3 border border-gray-200 rounded-full focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm lg:text-base"
+                          disabled={isLoading}
+                        />
+                      </div>
                     </div>
 
                     {/* Email Field */}
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="reg-email" className="block text-sm font-medium text-gray-700 mb-2">
                         Email
                       </label>
                       <Input
-                        id="email"
+                        id="reg-email"
                         type="email"
                         placeholder="Enter your Email"
                         value={email}

@@ -97,7 +97,7 @@ export function Header() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
                   <User className="w-4 h-4" />
-                  {user?.username || 'User'}
+                  {user?.firstname ? `${user.firstname} ${user.lastname}` : 'User'}
                 </button>
                 
                 {showUserMenu && (
@@ -214,7 +214,7 @@ export function Header() {
                 {isAuthenticated ? (
                   <>
                     <div className="px-4 py-3 bg-white/20 rounded-lg text-center">
-                      <p className="text-white font-medium">Welcome, {user?.username}!</p>
+                      <p className="text-white font-medium">Welcome, {user?.firstname} {user?.lastname}!</p>
                     </div>
                     <button 
                       className="w-full px-6 py-3 rounded-full text-white border-2 border-white/30 hover:border-white hover:bg-white hover:text-[#49BBBD] font-semibold transition-all duration-300 flex items-center justify-center gap-2" 
